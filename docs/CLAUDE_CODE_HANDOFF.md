@@ -64,7 +64,7 @@ Assert that the identity is `i-local-test`, inventory mode is `local-test`, depe
 
 ### Map application routes to the existing listener
 
-Install the Node process alongside the current app, listening on loopback `127.0.0.1:8787`. Preserve existing web-app behavior and target-group port. Add only path proxying for `/dashboard/` and `/api/demo/` in the existing authorized HTTPS virtual host. Retain authentication on both routes. Do not add another ALB target group or listener. Handle route collisions by namespacing both backend and frontend consistently.
+Install the Node process alongside the current app, listening on loopback `127.0.0.1:8787`. **The browser-facing service must use HTTPS 443 end to end through the existing ALB listener, existing HTTPS:443 target group, and EC2 TLS:443 web server.** The Node loopback port does not replace the existing external port. Verify target-group protocol and port with read-only discovery; if they differ, report the blocker and do not provision or modify AWS resources. Preserve existing web-app behavior and target-group port. Add only path proxying for `/dashboard/` and `/api/demo/` in the existing authorized HTTPS virtual host. Retain authentication on both routes. Do not add another ALB target group or listener. Handle route collisions by namespacing both backend and frontend consistently.
 
 If the existing server is not compatible with the supplied snippets, create a minimal proxy adaptation in the existing web application's code or approved server configuration. Do not overwrite another application's virtual host. Demonstrate that its preexisting health and business endpoints continue working.
 

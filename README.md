@@ -2,7 +2,7 @@
 
 An organization-neutral, interactive architecture dashboard that visualizes requests through an **existing** Application Load Balancer (ALB), EC2 Auto Scaling group, PostgreSQL database and Amazon S3. Each request names the exact EC2 instance that responded. When enabled, the same instance runs read-only PostgreSQL and S3 connectivity checks. Results drive animated flow paths and the event stream.
 
-**No Terraform, CloudFormation, account vending, AWS resource creation or credentials are included.** AppFlow installs beside an existing web application. Its routes are mounted into the web server already serving the existing ALB target group.
+**No Terraform, CloudFormation, account vending, AWS resource creation or credentials are included.** AppFlow installs beside an existing web application. Its routes are mounted into the web server already serving the existing ALB target group. **Client-facing traffic uses HTTPS port 443. The expected existing path is ALB HTTPS:443 → target group HTTPS:443 → EC2 web server TLS:443 → local Node adapter 127.0.0.1:8787.** The loopback adapter port is not a browser-facing endpoint.
 
 ## What is live, and what is not
 
@@ -45,7 +45,8 @@ Open `http://127.0.0.1:8787/dashboard/`. The backend is bound to **127.0.0.1 onl
 - Build the application-only archive using `bash deploy/build-release.sh`; distribute via the approved existing software release path.
 - Put a **runtime-only** config at `/etc/architecture-dashboard/dashboard.env` using `backend/.env.example`. Keep actual resource identifiers, secrets and endpoint names out of the public Git repository. A Secrets Manager ARN references an **existing** secret; it is not a password.
 - On **every** EC2 member, install the archive with `bash deploy/install-on-ec2.sh /path/unpacked --check` followed by `--apply` once reviewed. This affects only the dashboard service. It never overwrites existing Nginx or Apache configuration.
-- In the existing HTTPS virtual host, proxy `/dashboard/` and `/api/demo/` to `http://127.0.0.1:8787`, retaining existing authentication and TLS policies. See the templates under `deploy/`. **Do not create a listener, target group, security group or ALB for this application.**
+- Verify the already deployed target group speaks **HTTPS on port 443** to the EC2 web server. If it does not, report the mismatch; this application does not change load balancer configuration.
+- In the existing HTTPS **port 443** virtual host, proxy `/dashboard/` and `/api/demo/` to `http://127.0.0.1:8787`, retaining existing authentication and TLS policies. See the templates under `deploy/`. **Do not create a listener, target group, security group or ALB for this application.**
 - Validate on the local host and through the existing internal ALB, then incorporate the application into the already approved instance image/user-data/release automation so replacement EC2 instances run the same code.
 
 The existing ALB health check remains unchanged. The application exposes additional read-only endpoints at `/api/demo/health` and `/api/demo/ready`.

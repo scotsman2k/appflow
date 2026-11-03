@@ -9,9 +9,10 @@ This guide makes **no AWS resources**. Do not generate, apply or change Terrafor
 ## Expected request paths
 
 ```text
-Authorized browser (existing internal HTTPS origin)
-  -> existing HTTPS listener and target group
-  -> existing app web server on whichever EC2 the ALB selected
+Authorized browser (https://existing-origin, TCP 443)
+  -> existing ALB listener HTTPS:443
+  -> existing target group HTTPS:443
+  -> existing EC2 web server TLS:443 on whichever target the ALB selected
      -> GET /dashboard/       -> loopback AppFlow Node process (HTML with EC2 ID)
      -> GET /api/demo/request -> loopback AppFlow Node process (actual target ID)
           -> optional RDS TLS SELECT 1
@@ -28,6 +29,7 @@ Operate through an approved AWS role and SSM session; no long-lived IAM user key
 ```bash
 aws sts get-caller-identity
 aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names EXISTING_ASG_NAME --query 'AutoScalingGroups[0].{Instances:Instances[*].InstanceId,TargetGroupARNs:TargetGroupARNs,Min:MinSize,Max:MaxSize,Desired:DesiredCapacity}'
+aws elbv2 describe-target-groups --target-group-arns EXISTING_TARGET_GROUP_ARN --query 'TargetGroups[0].{Protocol:Protocol,Port:Port}'
 aws elbv2 describe-target-health --target-group-arn EXISTING_TARGET_GROUP_ARN
 aws ec2 describe-instances --instance-ids EXISTING_INSTANCE_ID --query 'Reservations[].Instances[].{Id:InstanceId,Subnet:SubnetId,Vpc:VpcId,Az:Placement.AvailabilityZone,IamProfile:IamInstanceProfile.Arn}'
 aws rds describe-db-instances --db-instance-identifier EXISTING_RDS_ID --query 'DBInstances[].{Endpoint:Endpoint.Address,Port:Endpoint.Port,MultiAZ:MultiAZ,Status:DBInstanceStatus}'
@@ -38,7 +40,8 @@ aws secretsmanager describe-secret --secret-id EXISTING_SECRET_ARN --query '{Nam
 Confirm before proceeding:
 
 - The current EC2 role can use IMDSv2 and read ASG/instance/VPC/subnet/ALB target-health inventory.
-- The existing HTTPS web server can add two path proxies without replacing its application routing or authentication.
+- The existing ALB listener is HTTPS:443, the existing target group is HTTPS:443, and the existing EC2 web server terminates TLS on 443. If any of these are not already true, stop and report the discrepancy; do not change AWS resources as part of AppFlow.
+- The existing HTTPS:443 web server can add two path proxies without replacing its application routing or authentication.
 - The existing approved private connectivity path reaches the AWS control-plane APIs.
 - When probes are enabled, EC2 can resolve/connect to PostgreSQL on TCP 5432 with TLS and can reach the existing S3 bucket through approved private HTTPS connectivity.
 - The RDS secret, TLS CA bundle, S3 object, IAM/bucket policy and relevant KMS grants **already exist**. If any do not, leave probes disabled and mark the dependency check unverified.
@@ -116,7 +119,7 @@ Required paths:
 | `/dashboard/` | `http://127.0.0.1:8787/dashboard/` | HTML, JS and CSS |
 | `/api/demo/` | `http://127.0.0.1:8787/api/demo/` | Identity, inventory, request attribution and probe APIs |
 
-Do **not** add a new ALB listener, host rule or target group. The existing ALB selects the same registered EC2 web server as before. Path-based reverse proxying inside that server forwards the request locally.
+Do **not** add a new ALB listener, host rule or target group. The application is accessible to browsers only at the existing `https://existing-origin/dashboard/` on port 443. The Node process remains on `127.0.0.1:8787` and is never directly exposed. The existing ALB selects the same registered EC2 web server as before. Path-based reverse proxying inside that server forwards the request locally.
 
 Important routing details:
 

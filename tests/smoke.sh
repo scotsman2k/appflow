@@ -10,6 +10,11 @@ for bin in curl jq sort uniq mktemp; do command -v "$bin" >/dev/null || { echo "
 : "${EXPECT_PROBES:=false}"
 curl_args=(--silent --show-error --fail-with-body --connect-timeout 5 --max-time 20)
 if [[ -n "${CA_CERT:-}" ]]; then curl_args+=(--cacert "$CA_CERT"); fi
+# Browser-facing integration must be HTTPS on standard port 443.
+if [[ ! "$BASE_URL" =~ ^https://[A-Za-z0-9.-]+(:443)?/?$ ]]; then
+  echo "BASE_URL must be an HTTPS origin on port 443, without a path" >&2
+  exit 2
+fi
 base="${BASE_URL%/}"
 echo "Validating existing HTTPS web-app path: $base"
 curl "${curl_args[@]}" "$base/api/demo/health" | jq -e '.ok == true'

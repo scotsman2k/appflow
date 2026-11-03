@@ -17,6 +17,7 @@ This document defines what can be proven by the AppFlow adapter and which observ
 
 | Signal | Check | Exact pass criteria | Cannot conclude |
 | --- | --- | --- | --- |
+| HTTPS port 443 contract | Read-only `describe-target-groups` plus browser URL | Existing ALB HTTPS:443 → target group HTTPS:443 → EC2 TLS:443, browser uses no nonstandard port | Node loopback 8787 is a public endpoint |
 | Web service | On EC2: `curl -fsS http://127.0.0.1:8787/api/demo/health` | `ok:true` | Business app is healthy |
 | Instance identity | On each EC2: `curl -fsS http://127.0.0.1:8787/api/demo/identity` | Matches that EC2's IMDSv2 identity | ALB actually routes to it |
 | Page identity | On each EC2: fetch `/dashboard/` | Embedded `pageInstanceId` matches serving EC2 | All follow-on requests use same EC2 |
