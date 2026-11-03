@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#071322">
+  <meta name="description" content="Live architecture flow dashboard for AWS ALB, EC2 Auto Scaling, PostgreSQL and replicated S3.">
+  <title>Cloud Flow | Architecture Explorer</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 40 40" width="40" height="40"><rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="#102b42" stroke="#397996"/><path d="M10 29 L20 11 L30 29 M10 29 H30" fill="none" stroke="#66d7e8" stroke-width="2" stroke-linejoin="round"/><circle cx="20" cy="11" r="3.5" fill="#71e4f0"/><circle cx="10" cy="29" r="3.5" fill="#71e4f0"/><circle cx="30" cy="29" r="3.5" fill="#71e4f0"/></svg></div>
+        <div><div class="brand-name">CLOUD FLOW</div><div class="brand-sub">ARCHITECTURE EXPLORER</div></div>
+      </div>
+      <div class="side-section-label">WORKSPACE</div>
+      <div class="nav-selected"><span class="nav-indicator"></span> Live architecture <span class="nav-hot"></span></div>
+      <div class="side-section-label">TRAFFIC LAYERS</div>
+      <div class="layer-options" role="group" aria-label="Traffic layer">
+        <button class="layer-btn active" data-filter="all"><span class="layer-dot all"></span><span>All network flows</span><span class="shortcut">01</span></button>
+        <button class="layer-btn" data-filter="app"><span class="layer-dot app"></span><span>Application</span><span class="shortcut">02</span></button>
+        <button class="layer-btn" data-filter="rds"><span class="layer-dot rds"></span><span>PostgreSQL</span><span class="shortcut">03</span></button>
+        <button class="layer-btn" data-filter="s3"><span class="layer-dot s3"></span><span>Object storage</span><span class="shortcut">04</span></button>
+      </div>
+      <div class="side-section-label">DEMO CONTROLS</div>
+      <div class="control-block">
+        <div class="control-top"><span>Traffic generator</span><span id="generator-state" class="generator-state">Running</span></div>
+        <button id="toggle-traffic" class="control-primary"><span id="traffic-action-symbol">Ⅱ</span><span id="traffic-action-label">Pause traffic</span></button>
+        <button id="send-request" class="control-secondary">Send single request <span>↗</span></button>
+        <div class="control-divider"></div>
+        <button id="scale-out" class="control-secondary">Simulate scale-out <span>+</span></button>
+        <button id="fail-instance" class="control-secondary">Fail selected EC2 <span>×</span></button>
+        <button id="restore-instances" class="control-secondary">Restore instances <span>↺</span></button>
+      </div>
+      <div class="side-bottom">
+        <div class="side-bottom-title">Architecture controls</div>
+        <label class="toggle-row"><span>Show security roles</span><input type="checkbox" id="security-overlay"><span class="fake-switch"></span></label>
+        <div class="side-note">Demonstration data is synthetic. No AWS requests are being made.</div>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumb">Cloud Platform <span>/</span> Application Patterns <span>/</span> <b>Live Architecture</b></div>
+        <div class="topbar-right"><span class="topbar-region"><span class="region-dot"></span> us-east-1</span><span class="clock" id="utc-clock">00:00:00 UTC</span><span class="workspace-indicator">REFERENCE</span></div>
+      </header>
+      <div class="content-body">
+        <div class="heading-row">
+          <div><div class="eyebrow">PATTERN OBSERVABILITY <span class="eyebrow-line"></span> ALB + ASG + RDS + S3</div><h1>Infrastructure in motion<span class="heading-accent">.</span></h1><p class="subtitle">Follow every application request across your AWS architecture.</p><p id="page-serving" class="page-origin">Page serving instance: demo only</p></div>
+          <div class="environment-pills"><span class="env-pill">REFERENCE ARCHITECTURE</span><span class="demo-pill"><span class="pulsing"></span> DEMO SIMULATION</span></div>
+        </div>
+        <section class="stats-grid" aria-label="Runtime statistics">
+          <article class="stat-card"><div class="stat-top">REQUESTS SERVED <span class="stat-mini">↗</span></div><div class="stat-value" id="requests-stat">1,248</div><div class="stat-footer"><span class="positive">+12.4%</span> <span>demo session</span></div><div class="stat-bars" id="request-bars"></div></article>
+          <article class="stat-card"><div class="stat-top">HEALTHY TARGETS <span class="stat-mini">◈</span></div><div class="stat-value"><span id="healthy-stat">4</span><span class="stat-denominator"> / <span id="total-stat">4</span></span></div><div class="stat-footer"><span class="health-dot"></span><span id="health-description">All targets healthy</span></div><div class="stat-ambient green"></div></article>
+          <article class="stat-card"><div class="stat-top">AVG RESPONSE TIME <span class="stat-mini">↗</span></div><div class="stat-value"><span id="latency-stat">42</span><span class="stat-unit"> ms</span></div><div class="stat-footer"><span class="positive">Healthy</span><span>application latency</span></div><div class="stat-ambient blue"></div></article>
+          <article class="stat-card"><div class="stat-top">DEPENDENCY CHECKS <span class="stat-mini">◇</span></div><div class="stat-dual"><div><div class="dual-name">PostgreSQL</div><div class="dual-state" id="db-overview">Reachable</div></div><div><div class="dual-name">S3</div><div class="dual-state" id="s3-overview">Reachable</div></div></div><div class="stat-footer"><span>Connectivity recorded for responding instances</span></div></article>
+        </section>
+        <section class="architecture-section">
+          <div class="panel-header">
+            <div><div class="panel-title"><span class="panel-title-square"></span> Live service topology</div><p>Interactive architecture · Select any component to inspect it</p></div>
+            <div class="panel-actions"><span class="topology-live"><span class="pulsing"></span> SIMULATED TRAFFIC</span><button id="fit-view" class="icon-button" aria-label="Reset selection" title="Reset selection">⌖</button></div>
+          </div>
+          <div class="topology-scroll">
+            <div class="topology-canvas">
+              <svg id="topology" viewBox="0 0 1320 650" role="img" aria-label="Interactive AWS architecture with user requests through the load balancer to EC2 instances in two Availability Zones, PostgreSQL and replicated S3">
+                <defs>
+                  <pattern id="dot-grid" width="23" height="23" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1" fill="#23344a" opacity=".68"/></pattern>
+                  <filter id="edge-glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  <filter id="node-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>
+                </defs>
+                <rect width="1320" height="650" fill="url(#dot-grid)"/>
+                <g class="vpc-group selectable" data-asset="vpc">
+                  <rect x="192" y="45" width="936" height="556" rx="18" fill="#14182e" fill-opacity=".37" stroke="#6956a2" stroke-width="1.5" stroke-dasharray="8 7"/>
+                  <rect x="212" y="27" width="235" height="34" rx="8" fill="#24213e" stroke="#6956a2"/>
+                  <text x="225" y="48" class="vpc-label">VPC</text><text x="265" y="48" class="vpc-name">demo-application-vpc</text>
+                  <text x="1106" y="66" class="vpc-cidr" text-anchor="end">10.42.0.0/16</text>
+                </g>
+                <g class="zone selectable" data-asset="zone-a">
+                  <rect x="428" y="91" width="433" height="205" rx="12" fill="#0d2734" fill-opacity=".52" stroke="#1d7386" stroke-width="1.3" stroke-dasharray="6 6"/>
+                  <text x="450" y="115" class="zone-label">AVAILABILITY ZONE 01</text><text x="840" y="115" text-anchor="end" class="zone-caption">us-east-1a</text>
+                  <text x="450" y="136" class="subnet-label">demo-app-private-a · 10.42.16.0/24</text>
+                </g>
+                <g class="zone selectable" data-asset="zone-b">
+                  <rect x="428" y="326" width="433" height="205" rx="12" fill="#0d2734" fill-opacity=".52" stroke="#1d7386" stroke-width="1.3" stroke-dasharray="6 6"/>
+                  <text x="450" y="350" class="zone-label">AVAILABILITY ZONE 02</text><text x="840" y="350" text-anchor="end" class="zone-caption">us-east-1b</text>
+                  <text x="450" y="371" class="subnet-label">demo-app-private-b · 10.42.17.0/24</text>
+                </g>
+                <rect x="438" y="286" width="188" height="20" rx="8" fill="#392c1e" stroke="#ad732f"/>
+                <text x="449" y="300" class="asg-caption">ONE AUTO SCALING GROUP</text>
+                <text x="643" y="300" class="asg-name">demo-app-asg</text>
+                <g id="flow-layer"></g>
+                <g class="user-node selectable" data-asset="users">
+                  <circle cx="82" cy="311" r="42" fill="#142235" stroke="#496783" stroke-width="1.5"/>
+                  <circle cx="82" cy="300" r="10" fill="none" stroke="#a4bad2" stroke-width="2.5"/><path d="M61 326 Q82 306 103 326" fill="none" stroke="#a4bad2" stroke-width="2.5" stroke-linecap="round"/>
+                  <text x="82" y="373" text-anchor="middle" class="resource-name">Application users</text><text x="82" y="392" text-anchor="middle" class="resource-meta">HTTPS 443</text>
+                </g>
+                <g class="alb-node selectable" data-asset="alb">
+                  <rect x="242" y="255" width="138" height="116" rx="13" fill="#1b1d3c" stroke="#9e80df" stroke-width="1.6"/>
+                  <circle cx="310" cy="285" r="19" fill="#7b52c3" fill-opacity=".18" stroke="#ae8ff6" stroke-width="1.4"/>
+                  <path d="M310 273 V280 M299 288 H321 M299 288 L302 301 M310 288 V301 M321 288 L318 301" stroke="#c5b0ff" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+                  <text x="311" y="329" text-anchor="middle" class="resource-name">Application ALB</text><text x="311" y="346" text-anchor="middle" class="resource-meta">demo-app-alb</text>
+                  <text x="310" y="362" text-anchor="middle" class="resource-small">HEALTHY · INTERNAL</text>
+                </g>
+                <g id="instance-layer"></g>
+                <g class="rds-node selectable" data-asset="rds">
+                  <rect x="910" y="241" width="174" height="146" rx="12" fill="#211b35" stroke="#a66ce1" stroke-width="1.6"/>
+                  <ellipse cx="997" cy="280" rx="24" ry="9" stroke="#c28bfa" fill="#723c9d" fill-opacity=".27" stroke-width="2"/>
+                  <path d="M973 280 V307 C973 320 1021 320 1021 307 V280" stroke="#c28bfa" stroke-width="2" fill="none"/>
+                  <path d="M973 292 C973 305 1021 305 1021 292" stroke="#c28bfa" stroke-width="2" fill="none"/>
+                  <text x="997" y="346" text-anchor="middle" class="resource-name">RDS PostgreSQL</text><text x="997" y="363" text-anchor="middle" class="resource-meta">demo-app-postgres</text>
+                  <circle cx="938" cy="374" r="4" class="status-ok"/><text x="948" y="378" class="resource-small">REACHABLE</text>
+                  <g class="security-marker"><rect x="1061" y="225" width="25" height="25" rx="5" fill="#c4662f"/><text x="1073.5" y="242" text-anchor="middle" class="security-letter">B</text></g>
+                </g>
+                <g class="s3-node selectable" data-asset="s3">
+                  <rect x="1171" y="260" width="138" height="117" rx="12" fill="#142d28" stroke="#4ba889" stroke-width="1.6"/>
+                  <path d="M1218 291 Q1240 278 1262 291 L1258 323 Q1240 333 1222 323Z" fill="#3da884" fill-opacity=".16" stroke="#72d1b0" stroke-width="2"/>
+                  <ellipse cx="1240" cy="291" rx="22" ry="7" fill="#193e35" stroke="#72d1b0" stroke-width="2"/>
+                  <text x="1240" y="344" text-anchor="middle" class="resource-name">Amazon S3</text><text x="1240" y="361" text-anchor="middle" class="resource-meta">Primary + replica</text>
+                  <g class="security-marker"><rect x="1291" y="244" width="25" height="25" rx="5" fill="#c4662f"/><text x="1303.5" y="261" text-anchor="middle" class="security-letter">C</text></g>
+                </g>
+                <g id="particles-layer"></g>
+                <g id="packet-tooltips"></g>
+              </svg>
+              <div class="canvas-watermark">DATA PATH VISUALIZATION <span>·</span> DEMONSTRATION</div>
+            </div>
+          </div>
+          <div class="flow-legend">
+            <span><i class="legend-line app"></i> User → ALB → EC2</span>
+            <span><i class="legend-line rds"></i> EC2 → PostgreSQL</span>
+            <span><i class="legend-line s3"></i> EC2 → S3</span>
+            <span><i class="legend-dot"></i> Response received</span>
+            <span class="legend-end"><i class="legend-fail"></i> Failure</span>
+          </div>
+        </section>
+        <section class="bottom-grid">
+          <article class="bottom-panel">
+            <div class="bottom-panel-header"><div><h2>Live request activity</h2><p>Observed application path, including dependency operations</p></div><span class="stream-chip">EVENT STREAM</span></div>
+            <div id="activity-list" class="activity-list" aria-live="polite"></div>
+          </article>
+          <article class="bottom-panel dependency-panel">
+            <div class="bottom-panel-header"><div><h2>Connectivity probes</h2><p>Read-only checks executed by the EC2 instance responding to each request</p></div></div>
+            <div class="dependency-item"><div class="dependency-heading"><span class="dep-icon purple">DB</span><div><strong>Amazon RDS for PostgreSQL</strong><small>SELECT 1 · TCP 5432 · TLS</small></div><span id="rds-result" class="dep-status good">Healthy</span></div><div class="dependency-latency"><span>Last observed latency</span><b id="rds-latency">12 ms</b></div><div class="probe-action-row"><button id="check-rds" class="probe-button">Run database check <span>↗</span></button><button id="toggle-rds" class="fault-button">Simulate failure</button></div></div>
+            <div class="dependency-item"><div class="dependency-heading"><span class="dep-icon orange">S3</span><div><strong>Amazon S3</strong><small>HeadObject · HTTPS 443 · private endpoint</small></div><span id="s3-result" class="dep-status good">Healthy</span></div><div class="dependency-latency"><span>Last observed latency</span><b id="s3-latency">18 ms</b></div><div class="probe-action-row"><button id="check-s3" class="probe-button">Run object check <span>↗</span></button><button id="toggle-s3" class="fault-button">Simulate failure</button></div></div>
+          </article>
+        </section>
+        <footer class="app-footer"><span>Cloud Flow · Interactive Architecture Demonstration</span><span>Illustrative data. Live integration requires an authenticated telemetry backend.</span></footer>
+      </div>
+    </main>
+    <aside class="inspector">
+      <div class="inspector-header"><div><span class="small-label">RESOURCE INSPECTOR</span><h2 id="inspector-heading">EC2 instance</h2></div><span class="inspector-pin">◈</span></div>
+      <div class="inspector-card">
+        <div class="inspector-resource"><span id="inspector-icon" class="inspect-icon orange">EC2</span><div><strong id="inspect-name">demo-app-web-01</strong><small id="inspect-id">i-0a3b71e5d0c228431</small></div></div>
+        <div class="resource-health"><span><i id="inspect-health-dot" class="health-dot"></i><span id="inspect-health">Healthy · InService</span></span><span id="inspect-az">us-east-1a</span></div>
+        <div class="inspector-divider"></div>
+        <div id="inspect-details" class="detail-list"></div>
+      </div>
+      <div class="inspector-section"><div class="inspector-section-header"><h3>Most recent response</h3><span class="mini-pulse"></span></div><div class="response-card"><div class="response-label">SERVED BY</div><div id="last-responder" class="response-id">i-0a3b71e5d0c228431</div><div class="response-bottom"><span><i class="health-dot"></i><span id="last-response-status">HTTP 200</span></span><strong id="last-response-latency">42 ms</strong></div></div></div>
+      <div class="inspector-section"><div class="inspector-section-header"><h3>Service dependencies</h3></div><div class="dependency-links"><div class="dependency-link"><span class="dep-icon purple">DB</span><span>PostgreSQL</span><span id="db-connection-indicator" class="connection-state">Connected</span></div><div class="dependency-link"><span class="dep-icon orange">S3</span><span>Object storage</span><span id="s3-connection-indicator" class="connection-state">Connected</span></div></div></div>
+      <div class="inspector-tip"><strong>What is real in a connected deployment?</strong><p>Backend responses identify the serving EC2 instance. Read-only AWS discovery supplies resource names, target health and Auto Scaling membership. Database and S3 paths animate only when instrumented operations are observed.</p></div>
+    </aside>
+  </div>
+    <div id="page-context" data-json="__PAGE_CONTEXT_JSON__" hidden></div>
+  <script src="./app.js"></script>
+</body>
+</html>

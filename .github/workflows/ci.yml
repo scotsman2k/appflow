@@ -1,0 +1,24 @@
+name: Application checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+        working-directory: backend
+      - run: npm test
+        working-directory: backend
+      - run: npm run check
+        working-directory: backend
+      - name: Validate frontend syntax
+        run: node --check dashboard/app.js

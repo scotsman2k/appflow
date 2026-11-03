@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0",
+  "environment": "REPLACE_ENVIRONMENT",
+  "primaryRegion": "us-east-1",
+  "existing": {
+    "applicationLoadBalancer": {
+      "name": "EXISTING_ALB_NAME",
+      "httpsOrigin": "https://existing-application.example.internal",
+      "listener": "EXISTING_HTTPS_LISTENER",
+      "targetGroupArn": "EXISTING_TARGET_GROUP_ARN"
+    },
+    "autoScalingGroup": {
+      "name": "EXISTING_ASG_NAME",
+      "deploymentMethod": "EXISTING_IMAGE_OR_PIPELINE"
+    },
+    "privateApplicationSubnets": [
+      "EXISTING_PRIVATE_SUBNET_A",
+      "EXISTING_PRIVATE_SUBNET_B"
+    ],
+    "database": {
+      "identifier": "EXISTING_RDS_IDENTIFIER",
+      "privateEndpoint": "EXISTING_RDS_ENDPOINT",
+      "port": 5432,
+      "secretReference": "EXISTING_SECRETS_MANAGER_SECRET_ARN"
+    },
+    "objectStorage": {
+      "primaryBucket": "EXISTING_SOURCE_BUCKET",
+      "existingReadableObjectKey": "EXISTING_OBJECT_KEY",
+      "replicaBucket": "EXISTING_REPLICA_BUCKET"
+    }
+  },
+  "appRoutes": {
+    "dashboard": "/dashboard/",
+    "api": "/api/demo/",
+    "localLoopback": "http://127.0.0.1:8787"
+  },
+  "evidence": {
+    "browserRequests": "Exact responding instance for dashboard-generated requests",
+    "rds": "SELECT 1 via TLS from the responding instance",
+    "s3": "HeadObject of one existing object",
+    "replication": "Not asserted by a source-bucket HeadObject"
+  }
+}

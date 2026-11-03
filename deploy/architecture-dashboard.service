@@ -1,0 +1,33 @@
+[Unit]
+Description=Architecture Dashboard EC2 Adapter
+Documentation=file:/opt/architecture-dashboard/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=archdash
+Group=archdash
+WorkingDirectory=/opt/architecture-dashboard/backend
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/architecture-dashboard/dashboard.env
+ExecStart=/usr/bin/node /opt/architecture-dashboard/backend/server.mjs
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=20s
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0027
+LimitNOFILE=8192
+MemoryMax=512M
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

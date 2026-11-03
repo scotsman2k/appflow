@@ -1,0 +1,21 @@
+{
+  "name": "appflow-live-architecture",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs",
+    "test": "node --test ../tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-auto-scaling": "3.1100.0",
+    "@aws-sdk/client-ec2": "3.1100.0",
+    "@aws-sdk/client-elastic-load-balancing-v2": "3.1100.0",
+    "@aws-sdk/client-rds": "3.1100.0",
+    "@aws-sdk/client-s3": "3.1100.0",
+    "@aws-sdk/client-secrets-manager": "3.1100.0",
+    "pg": "8.16.3"
+  }
+}

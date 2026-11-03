@@ -1,0 +1,18 @@
+# Never commit local runtime secrets or private infrastructure details
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*credentials*
+*secrets*
+node_modules/
+dist/
+*.tgz
+*.zip
+.coverage/
+coverage/
+.DS_Store
